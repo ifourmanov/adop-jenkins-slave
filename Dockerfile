@@ -41,8 +41,11 @@ RUN wget -q --no-check-certificate --directory-prefix=/tmp \
             alternatives --install /usr/bin/java java /opt/java/jdk${JAVA_VERSION}/bin/java 100 && \
                 rm -rf /tmp/* && rm -rf /var/log/*
 
-# Make Jenkins a slave by installing swarm-client
-RUN curl -s -o /bin/swarm-client.jar -k http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/2.0/swarm-client-2.0-jar-with-dependencies.jar
+# Install node
+RUN curl --silent --location https://rpm.nodesource.com/setup_4.x | bash 
+RUN yum install -y nodejs
+RUN npm install bower -g &&\
+    npm install grunt-cli -g
 
 # Install mono version and libuv for dotnet support
 RUN curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | DNX_BRANCH=dev sh 
@@ -59,6 +62,10 @@ RUN wget http://dist.libuv.org/dist/v1.8.0/libuv-v1.8.0.tar.gz && \
      make install && \
      ln -s /usr/lib64/libdl.so.2 /usr/lib64/libdl && \
      ln -s /usr/local/lib/libuv.so.1.0.0 /usr/lib64/libuv.so
+
+# Make Jenkins a slave by installing swarm-client
+RUN curl -s -o /bin/swarm-client.jar -k http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/2.0/swarm-client-2.0-jar-with-dependencies.jar
+
 
 # Start Swarm-Client
 CMD java -jar /bin/swarm-client.jar -executors ${SLAVE_EXECUTORS} -description "${SLAVE_DESCRIPTION}" -master ${SWARM_MASTER} -username ${SWARM_USER} -password ${SWARM_PASSWORD} -name "${SLAVE_NAME}" -labels "${SLAVE_LABELS}" -mode ${SLAVE_MODE}
